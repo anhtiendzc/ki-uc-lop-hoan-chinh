@@ -5,11 +5,11 @@ from werkzeug.utils import secure_filename
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100MB
-
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    uploaded_file = None
     if request.method == 'POST':
         if 'file' not in request.files:
             return 'No file part'
@@ -20,17 +20,12 @@ def index():
             filename = secure_filename(file.filename)
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
-            return redirect(url_for('index', filename=filename))
+            uploaded_file = filename
 
-    # Lấy danh sách file để hiển thị
     files = os.listdir(app.config['UPLOAD_FOLDER'])
-
-    # Lấy filename vừa upload nếu có
-    uploaded_file = request.args.get('filename')
-
+    files.sort(reverse=True)  # sắp xếp mới nhất lên đầu
     return render_template('index.html', files=files, uploaded_file=uploaded_file)
 
 if __name__ == '__main__':
-    import os
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
